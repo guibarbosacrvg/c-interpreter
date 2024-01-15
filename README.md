@@ -27,3 +27,8 @@ This is a simple C interpreter written in Rust. It is based on the [C11 standard
 - [ ] Standard signal library
 
 ## Usage
+
+
+## References
+- [C11 standard](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
+- [Writing an interpreter in Go](https://interpreterbook.com/)

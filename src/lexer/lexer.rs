@@ -31,7 +31,7 @@ impl Lexer {
     }
 
     pub fn read_identifier(&mut self) -> String {
-        let position = self.position;
+        let position: usize = self.position;
         for ch in self.input.chars().skip(self.position) {
             if !is_letter(ch) {
                 break;
@@ -42,7 +42,7 @@ impl Lexer {
     }
 
     pub fn read_number(&mut self) -> String {
-        let position = self.position;
+        let position: usize = self.position;
         for ch in self.input.chars().skip(self.position) {
             if !ch.is_digit(10) {
                 break;
@@ -73,11 +73,9 @@ impl Lexer {
             '\0' => new_token(EOF.to_string(), self.ch),
             _ => {
                 if is_letter(self.ch) {
-                    let literal: String = self.read_identifier();
-                    return new_token(literal, literal);
-                } else if self.ch.is_digit(10) {
-                    let literal: String = self.read_number();
-                    return new_token(INT.to_string(), literal);
+                    let literal = self.read_identifier();
+                    self.read_char();  // Ensure read_char is called before returning
+                    return new_token(IDENT.to_string(), literal);
                 } else {
                     new_token(ILLEGAL.to_string(), self.ch)
                 }
