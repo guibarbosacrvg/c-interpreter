@@ -5,7 +5,7 @@ pub struct Lexer {
     input: String,
     position: usize,
     read_position: usize,
-    ch: char,
+    ch: &str,
 }
 
 impl Lexer {
@@ -14,70 +14,79 @@ impl Lexer {
             input,
             position: 0,
             read_position: 0,
-            ch: '\0',
+            ch: "\0",
         };
         lex.read_char();
         lex
     }
 
+    pub fn skip_whitespace(&mut self) {
+        while self.position < self.input.len() {
+            match self.ch {
+                " " | "\t" | "\n" | "\r" => self.read_char(),
+                _ => break,
+            }
+        }
+    }
+
     pub fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
-            self.ch = '\0'; /* ASCII code for "NUL" character, indicates EOF or that nothing was read yet */
+            self.ch = "\0"; /* ASCII code for "NUL" character, indicates EOF or that nothing was read yet */
         } else {
-            self.ch = self.input.chars().nth(self.read_position).unwrap();
+            self.ch = self.input.chars().nth(self.read_position).unwrap().to_string().as_str();
         }
         self.position = self.read_position;
         self.read_position += 1;
     }
 
     pub fn read_identifier(&mut self) -> String {
-        let position: usize = self.position;
-        for ch in self.input.chars().skip(self.position) {
-            if !is_letter(ch) {
-                break;
-            }
+        let start_position = self.position;
+        while is_letter(self.ch.chars().nth(0).unwrap()) {
             self.read_char();
         }
-        self.input[position..self.position].to_string()
+        self.input[start_position..self.position].to_string()
     }
 
     pub fn read_number(&mut self) -> String {
-        let position: usize = self.position;
-        for ch in self.input.chars().skip(self.position) {
-            if !ch.is_digit(10) {
-                break;
-            }
+        let start_position = self.position;
+        while self.ch.chars().nth(0).unwrap().is_digit(10) {
             self.read_char();
         }
-        self.input[position..self.position].to_string()
+        self.input[start_position..self.position].to_string()
     }
 
     pub fn next_token(&mut self) -> Token {
+        self.skip_whitespace();
         let tok: Token = match self.ch {
-            '=' => new_token(ASSIGN.to_string(), self.ch),
-            ';' => new_token(SEMICOLON.to_string(), self.ch),
-            ',' => new_token(COMMA.to_string(), self.ch),
-            '(' => new_token(LPAREN.to_string(), self.ch),
-            ')' => new_token(RPAREN.to_string(), self.ch),
-            '+' => new_token(PLUS.to_string(), self.ch),
-            '{' => new_token(LBRACE.to_string(), self.ch),
-            '}' => new_token(RBRACE.to_string(), self.ch),
-            '[' => new_token(LBRACKET.to_string(), self.ch),
-            ']' => new_token(RBRACKET.to_string(), self.ch),
-            '-' => new_token(MINUS.to_string(), self.ch),
-            '!' => new_token(BANG.to_string(), self.ch),
-            '/' => new_token(SLASH.to_string(), self.ch),
-            '*' => new_token(ASTERISK.to_string(), self.ch),
-            '<' => new_token(LT.to_string(), self.ch),
-            '>' => new_token(GT.to_string(), self.ch),
-            '\0' => new_token(EOF.to_string(), self.ch),
+            "=" => new_token(ASSIGN.to_string(), self.ch.to_string()),
+            ";" => new_token(SEMICOLON.to_string(), self.ch.to_string()),
+            "," => new_token(COMMA.to_string(), self.ch.to_string()),
+            "(" => new_token(LPAREN.to_string(), self.ch.to_string()),
+            ")" => new_token(RPAREN.to_string(), self.ch.to_string()),
+            "+" => new_token(PLUS.to_string(), self.ch.to_string()),
+            "{" => new_token(LBRACE.to_string(), self.ch.to_string()),
+            "}" => new_token(RBRACE.to_string(), self.ch.to_string()),
+            "[" => new_token(LBRACKET.to_string(), self.ch.to_string()),
+            "]" => new_token(RBRACKET.to_string(), self.ch.to_string()),
+            "-" => new_token(MINUS.to_string(), self.ch.to_string()),
+            "!" => new_token(BANG.to_string(), self.ch.to_string()),
+            "/" => new_token(SLASH.to_string(), self.ch.to_string()),
+            "*" => new_token(ASTERISK.to_string(), self.ch.to_string()),
+            "<" => new_token(LT.to_string(), self.ch.to_string()),
+            ">" => new_token(GT.to_string(), self.ch.to_string()),
+            // "<=" => new_token(LESS_EQ.to_string(), self.ch.to_string()),
+            // ">=" => new_token(GREATER_EQ.to_string(), self.ch.to_string()),
+            "\0" => new_token(EOF.to_string(), self.ch.to_string()),
             _ => {
-                if is_letter(self.ch) {
-                    let literal = self.read_identifier();
-                    self.read_char();  // Ensure read_char is called before returning
+                if is_letter(self.ch.chars().nth(0).unwrap()) {
+                    let literal: String = self.read_identifier();
+                    self.read_char();
                     return new_token(IDENT.to_string(), literal);
+                } else if self.ch.chars().nth(0).unwrap().is_digit(10) {
+                    let literal: String = self.read_number();
+                    return new_token(INT.to_string(), literal);
                 } else {
-                    new_token(ILLEGAL.to_string(), self.ch)
+                    new_token(ILLEGAL.to_string(), self.ch.to_string())
                 }
             }
         };
@@ -98,7 +107,7 @@ mod tests {
         assert_eq!(lex.input, String::from("=+(){},;"));
         assert_eq!(lex.position, 0);
         assert_eq!(lex.read_position, 1);
-        assert_eq!(lex.ch, '=');
+        assert_eq!(lex.ch, "=");
     }
 
     #[test]
@@ -160,5 +169,4 @@ mod tests {
             assert_eq!(tok.literal, expected_token.literal);
         }
     }
-
 }

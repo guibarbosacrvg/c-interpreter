@@ -1,9 +1,9 @@
 use super::tokens::*;
 
-pub fn new_token(tok_type: TokenType, ch: char) -> Token {
+pub fn new_token(tok_type: TokenType, literal: String) -> Token {
     Token {
         kind: tok_type,
-        literal: ch.to_string(),
+        literal,
     }
 }
 
